@@ -5,7 +5,7 @@ import time
 import System
 import json  # Import json module
 from System import Byte
-
+import dronekit 
 clr.AddReference("MissionPlanner")
 import MissionPlanner
 clr.AddReference("MissionPlanner.Utilities") 

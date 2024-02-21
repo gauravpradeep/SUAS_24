@@ -4,8 +4,15 @@ from shapely.geometry import Polygon, Point
 import pyproj
 import random
 import json
-latitudes = [13.347815, 13.347632, 13.347639, 13.347818, 13.347815]
-longitudes = [74.792147, 74.792138, 74.792246, 74.792201, 74.792147]
+
+def utm_to_gps(utm_proj, utm_x, utm_y):
+    gps_proj = pyproj.Proj(proj='latlong', datum='WGS84')
+    lon, lat = pyproj.transform(utm_proj, gps_proj, utm_x, utm_y)
+    return lat, lon
+
+
+latitudes = [13.347838317394102, 13.347766501694263, 13.347763890213866, 13.347844846093022, 13.347838317394102]
+longitudes = [74.7922255768232, 74.79222825861194, 74.79215585031544, 74.79215048673794, 74.7922255768232]
 
 points = list(zip(longitudes, latitudes))
 
@@ -16,10 +23,9 @@ polygon = Polygon(utm_points)
 cell_width = 5
 cell_height = 5
 centroids=[]
-# Determine the bounding box of the polygon.
+
 min_x, min_y, max_x, max_y = polygon.bounds
 
-# Create a grid of rectangular cells.
 cells = []
 x = min_x
 while x < max_x:
@@ -33,7 +39,7 @@ while x < max_x:
         y += cell_height
     x += cell_width
 
-# Visualize the cells and the polygon (optional).
+
 fig, ax = plt.subplots()
 for i, cell in enumerate(cells):
     x, y = cell.exterior.xy
@@ -42,19 +48,14 @@ x, y = polygon.exterior.xy
 ax.plot(x, y, color='red')
 ax.set_aspect('equal')
 plt.show()
-print(centroids)
 
-def utm_to_gps(utm_proj, utm_x, utm_y):
-    gps_proj = pyproj.Proj(proj='latlong', datum='WGS84')
-    lon, lat = pyproj.transform(utm_proj, gps_proj, utm_x, utm_y)
-    return lat, lon
 
 # Convert the UTM centroids to GPS coordinates
 gps_centroids = [utm_to_gps(utm_proj, point.x, point.y) for point in centroids]
-gps_centroids_dict = {"waypoints": [{"latitude": lat, "longitude": lon, "altitude": 50 } for lat, lon in gps_centroids]}
+gps_centroids_dict = {"waypoints": [{"latitude": lat, "longitude": lon, "altitude": 80 } for lat, lon in gps_centroids]}
 
 # File path for the JSON file
-json_file_path = 'test_centroids.json'
+json_file_path = '../missions/coverage_wps/test_coverage_wps.json'
 
 # Write the GPS centroids to a JSON file
 with open(json_file_path, 'w') as json_file:
