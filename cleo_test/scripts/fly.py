@@ -12,6 +12,9 @@ from MissionPlanner.Utilities import Locationwp
 clr.AddReference("MAVLink") # includes the Utilities class
 import MAVLink
 import socket
+import json
+import os
+
 
 # '''
 
@@ -76,25 +79,15 @@ def load_airdrop_wps(file_path):
         data = json.load(file)
     return data["waypoints"]
 
-def send_data(message):
-    global sock
-    try:
-        sock.sendall(message.encode())
-    except Exception as e:
-        print(f"Error sending data: {e}")
-
 def check_status(final_lat,final_lon):
 
     while True:
         current_location = f"{cs.lat},{cs.lng}"
-        send_data(current_location)
         if haversine_dist(cs.lat,cs.lng,final_lat,final_lon) <= 0.5:
             break
         else:
             
             Script.Sleep(500)
-
-
 
 def upload_mission(waypoints):
     print("Uploading initial waypoints + coverage waypoints")
@@ -121,23 +114,48 @@ def airdrops(airdrop_wps):
     item = MissionPlanner.Utilities.Locationwp() # creating waypoint
     Locationwp.lat.SetValue(item,airdrop_wps['latitude']) # sets latitude
     Locationwp.lng.SetValue(item,airdrop_wps['longitude']) # sets longitude
-    Locationwp.alt.SetValue(item,airdrop_wps['altitude']/FT_TO_MT) # sets altitude
+    Locationwp.alt.SetValue(item,50/FT_TO_MT) # sets altitude
 
     MAV.setGuidedModeWP(item)
 
+def start_server(host, port, save_path):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind((host, port))
+        s.listen()
+        print(f"Server listening on {host}:{port}")
 
+        while True:
+            conn, addr = s.accept()
+            with conn:
+                print(f"Connected by {addr}")
+                data = b''
+                while True:
+                    part = conn.recv(1024)
+                    if "END_OF_DATA".encode('utf-8') in part:
+                        # Remove the end-of-data message from the data
+                        part = part.replace("END_OF_DATA".encode('utf-8'), b'')
+                        data += part
+                        break
+                    data += part
 
-server_ip = '169.254.7.69'  # Replace with the IP address of the receiving computer
-server_port = 12345  # Replace with the appropriate port number
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-print("Starting to connect")
-sock.connect((server_ip, server_port))
-print("Connected to the server.")
+                json_data = json.loads(data.decode('utf-8'))
+                print("Received data:")
+                print(json.dumps(json_data, indent=4))
 
+                # Save the data as a JSON file
+                file_path = os.path.join(save_path, f"airdrops_suas.json")
+                with open(file_path, 'w') as file:
+                    json.dump(json_data, file, indent=4)
+                print(f"Data saved to {file_path}")
+                conn.close()
+                break
+            break
+        s.close()
+        print("airdrop json created")
 
-waypoints_json = 'C:/Users/maxim/gaurav/scripts/cleo_test/missions/waypoints/test_wps.json'
-coverage_wps_json = 'C:/Users/maxim/gaurav/scripts/cleo_test/missions/coverage_wps/test_coverage_wps.json'
-airdrop_wps_json = 'C:/Users/maxim/gaurav/scripts/cleo_test/missions/airdrop_coords/test_airdrop.json'
+waypoints_json = 'C:/Users/maxim/gaurav/suas24/cleo_test/missions/waypoints/test_wps.json'
+coverage_wps_json = 'C:/Users/maxim/gaurav/suas24/cleo_test/missions/coverage_wps/test_coverage_wps.json'
+
 mission = load_waypoints(waypoints_json)
 coverage_waypoints = load_coverage_wps(coverage_wps_json)
 mission.extend(coverage_waypoints)
@@ -148,19 +166,21 @@ print("Starting Mission")
 Script.ChangeMode('Auto')
 check_status(mission[-1]['latitude'],mission[-1]['longitude'])
 
-'''
-write a function to receive odlc target coordinates
-'''
 
+host = '0.0.0.0'
+port = 5051 
+save_folder = "C:/Users/maxim/gaurav/suas24/cleo_test/missions/airdrop_coords" 
 
-# airdrop_wps = load_airdrop_wps(airdrop_wps_json)
-# print("Found ODCL object - Going to drop dem bombs")
-# airdrops(airdrop_wps[0])
-# check_status(airdrop_wps[0]['latitude'],airdrop_wps[0]['longitude'])
-# Script.Sleep(2000)
-# print("Sending servo command")
-# MAV.doCommand(MAVLink.MAV_CMD.DO_SET_SERVO,9,400,0,0,0,0,0)
-# print("sent servo command")
-# Script.Sleep(4000)
-# Script.ChangeMode('RTL')
-# print("Coming Home ")
+start_server(host, port, save_folder)
+airdrop_wps_json = 'C:/Users/maxim/gaurav/suas24/cleo_test/missions/airdrop_coords/airdrops_suas.json'
+airdrop_wps = load_airdrop_wps(airdrop_wps_json)
+print("Found ODLC object - Going to drop dem bombs")
+airdrops(airdrop_wps[0])
+check_status(airdrop_wps[0]['latitude'],airdrop_wps[0]['longitude'])
+Script.Sleep(2000)
+print("Sending servo command")
+MAV.doCommand(MAVLink.MAV_CMD.DO_SET_SERVO,9,400,0,0,0,0,0)
+print("sent servo command")
+Script.Sleep(4000)
+Script.ChangeMode('RTL')
+print("Coming Home ")
