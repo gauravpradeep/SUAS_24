@@ -5,7 +5,7 @@ import struct
 import multiprocessing
 import time
 
-SERVER_IP = '172.16.16.76'  # Replace with your server IP
+SERVER_IP = '192.168.42.198'  # Replace with your server IP
 SERVER_PORT = 5050
 
 # Function to capture frames
