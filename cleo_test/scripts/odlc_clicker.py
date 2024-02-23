@@ -49,6 +49,7 @@ def send_data(data, host, port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((host, port))
         s.sendall(json.dumps(data).encode('utf-8'))
+        s.sendall("END_OF_DATA".encode('utf-8'))
         
         
 folder_path = "../images/"

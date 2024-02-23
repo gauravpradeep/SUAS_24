@@ -15,10 +15,12 @@ def start_server(host, port, save_path):
                 data = b''
                 while True:
                     part = conn.recv(1024)
-                    data += part
-                    if len(part) < 1024:
-                        # No more data to be received
+                    if "END_OF_DATA".encode('utf-8') in part:
+                        # Remove the end-of-data message from the data
+                        part = part.replace("END_OF_DATA".encode('utf-8'), b'')
+                        data += part
                         break
+                    data += part
 
                 json_data = json.loads(data.decode('utf-8'))
                 print("Received data:")
@@ -29,6 +31,10 @@ def start_server(host, port, save_path):
                 with open(file_path, 'w') as file:
                     json.dump(json_data, file, indent=4)
                 print(f"Data saved to {file_path}")
+                conn.close()
+                break
+            break
+        s.close()
 
 # Network parameters - adjust these to suit your setup
 host = '0.0.0.0'  # Listen on all available interfaces
