@@ -3,17 +3,17 @@
         {
             "latitude": 13.347650385750157,
             "longitude": 74.7921679194155,
-            "altitude": 60
+            "altitude": 30
         },
         {
             "latitude": 13.347698698155623,
             "longitude": 74.792201441775,
-            "altitude": 50
+            "altitude": 25
         },
         {
             "latitude": 13.347722201484522,
             "longitude": 74.79216523762672,
-            "altitude": 50
+            "altitude": 30
         }
     ]
 }

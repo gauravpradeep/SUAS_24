@@ -20,16 +20,25 @@ import os
 
 # Params:
 # M_TO_FT : Conversion factor for feet to metres since all altitudes in mission planner are in metres but we will mention altitudes in feet
-# ALT : Initial takeoff altitude
+# ALT : Initial takeoff altitude in feet
 
 # '''
 
-
 FT_TO_MT=3.28084
-ALT=100
-count=0
+ALT=30
+host = '0.0.0.0'
+port = 50579 
+airdrops_json_folder = "C:/Users/maxim/gaurav/suas24/cleo_test/missions/airdrop_coords" 
 
 def haversine_dist(lat1, lon1, lat2, lon2):
+    
+    '''
+    
+    Calcultes and returns the haversine distance, in metres, between two pairs of global coordinates, used to account for curvature of the earth
+    Params:
+    R : Radius of the Earth in metres
+
+    '''
     R = 6371000.0
 
     phi1 = math.radians(lat1)
@@ -47,6 +56,13 @@ def haversine_dist(lat1, lon1, lat2, lon2):
     return distance
 
 def arm_and_takeoff(alt):
+
+    '''
+    
+    Arms the drone and takes off to 'alt' feet
+
+    '''
+
     Script.ChangeMode('Stabilize')
     Script.Sleep(1000)
     print("Arming Motors")
@@ -65,60 +81,113 @@ def arm_and_takeoff(alt):
     print("Reached Target Altitude")
 
 def load_waypoints(file_path):
+    '''
+    
+    Loads the initial lap waypoints
+
+    '''
+
     with open(file_path, 'r') as file:
         data = json.load(file)
     return data["waypoints"]
 
 def load_coverage_wps(file_path):
+
+    '''
+    
+    Loads the calculated intermediate waypoints for coverage
+
+    '''
     with open(file_path, 'r') as file:
         data = json.load(file)
     return data["waypoints"]
 
 def load_airdrop_wps(file_path):
+
+    '''
+    
+    Loads set of airdrop coordinates as received from the ODLC computer via ethernet
+
+    '''
+
     with open(file_path, 'r') as file:
         data = json.load(file)
     return data["waypoints"]
 
 def check_status(final_lat,final_lon):
 
+    '''
+    
+    Checks whether the drone is within the distance threshold to the given lat,lon
+
+    Params:
+    proximity_threshold : Sets the threshold distance, in metres, within which a waypoint is said to be met 
+
+    '''
+    proximity_threshold = 0.7
+
     while True:
         current_location = f"{cs.lat},{cs.lng}"
-        if haversine_dist(cs.lat,cs.lng,final_lat,final_lon) <= 0.5:
+        if haversine_dist(cs.lat,cs.lng,final_lat,final_lon) <= proximity_threshold:
             break
         else:
             
             Script.Sleep(500)
 
 def upload_mission(waypoints):
-    print("Uploading initial waypoints + coverage waypoints")
-    global count
-    idmavcmd = MAVLink.MAV_CMD.WAYPOINT
-    id = int(idmavcmd)
 
-    home = Locationwp().Set(cs.lat, cs.lng, 0, id)
+    '''
+    
+    Uploads the set of waypoints as a mission on to the drone and keeps control in the function until these set of waypoints are completed
+    
+    '''
+
+    print("Uploading initial waypoints + coverage waypoints")
+    global id, home
 
     MAV.setWPTotal(len(waypoints) + 1)
     MAV.setWP(home, 0, MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT)
 
-    # Upload waypoints from JSON file
     for i, wp in enumerate(waypoints):
-        count+=1
+        
         waypoint = Locationwp().Set(wp['latitude'], wp['longitude'], wp['altitude']/FT_TO_MT, id)
         MAV.setWP(waypoint, i + 1, MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT)
 
     MAV.setWPACK()
     Script.Sleep(2000)
+    print("Starting Mission")
+    Script.ChangeMode('Auto')
+    Script.Sleep(1000)
+    check_status(waypoints[-1]['latitude'],waypoints[-1]['longitude'])
 
-def airdrops(airdrop_wps):
+def airdrops(airdrop_wp):
+
+    '''
+    
+    Takes one airdrop coordinate and performs drop, need to update to make pin number a param for
+
+    '''
     Script.ChangeMode("Guided")
     item = MissionPlanner.Utilities.Locationwp() # creating waypoint
-    Locationwp.lat.SetValue(item,airdrop_wps['latitude']) # sets latitude
-    Locationwp.lng.SetValue(item,airdrop_wps['longitude']) # sets longitude
-    Locationwp.alt.SetValue(item,50/FT_TO_MT) # sets altitude
-
+    Locationwp.lat.SetValue(item,airdrop_wp['latitude']) # sets latitude
+    Locationwp.lng.SetValue(item,airdrop_wp['longitude']) # sets longitude
+    Locationwp.alt.SetValue(item,30/FT_TO_MT) # sets altitude
     MAV.setGuidedModeWP(item)
+    check_status(airdrop_wp['latitude'],airdrop_wp['longitude'])
+    Script.Sleep(2000)
+    print("Sending servo command")
+    MAV.doCommand(MAVLink.MAV_CMD.DO_SET_SERVO,9,400,0,0,0,0,0)
+    print("Sent Servo Command")
+    Script.Sleep(3000)
 
 def start_server(host, port, save_path):
+
+    '''
+    
+    Starts listening on specified port via ethernet connection to receive airdrop coords from ODLC computer and saves it in json format
+    
+    '''
+
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind((host, port))
         s.listen()
@@ -132,7 +201,6 @@ def start_server(host, port, save_path):
                 while True:
                     part = conn.recv(1024)
                     if "END_OF_DATA".encode('utf-8') in part:
-                        # Remove the end-of-data message from the data
                         part = part.replace("END_OF_DATA".encode('utf-8'), b'')
                         data += part
                         break
@@ -142,7 +210,6 @@ def start_server(host, port, save_path):
                 print("Received data:")
                 print(json.dumps(json_data, indent=4))
 
-                # Save the data as a JSON file
                 file_path = os.path.join(save_path, f"airdrops_suas.json")
                 with open(file_path, 'w') as file:
                     json.dump(json_data, file, indent=4)
@@ -153,6 +220,10 @@ def start_server(host, port, save_path):
         s.close()
         print("airdrop json created")
 
+idmavcmd = MAVLink.MAV_CMD.WAYPOINT
+id = int(idmavcmd)
+home = Locationwp().Set(cs.lat, cs.lng, 0, id)
+
 waypoints_json = 'C:/Users/maxim/gaurav/suas24/cleo_test/missions/waypoints/test_wps.json'
 coverage_wps_json = 'C:/Users/maxim/gaurav/suas24/cleo_test/missions/coverage_wps/test_coverage_wps.json'
 
@@ -160,27 +231,14 @@ mission = load_waypoints(waypoints_json)
 coverage_waypoints = load_coverage_wps(coverage_wps_json)
 mission.extend(coverage_waypoints)
 
-arm_and_takeoff(50)
+arm_and_takeoff(ALT)
 upload_mission(mission)
-print("Starting Mission")
-Script.ChangeMode('Auto')
-check_status(mission[-1]['latitude'],mission[-1]['longitude'])
 
+# start_server(host, port, airdrops_json_folder)
 
-host = '0.0.0.0'
-port = 5051 
-save_folder = "C:/Users/maxim/gaurav/suas24/cleo_test/missions/airdrop_coords" 
-
-start_server(host, port, save_folder)
-airdrop_wps_json = 'C:/Users/maxim/gaurav/suas24/cleo_test/missions/airdrop_coords/airdrops_suas.json'
+airdrop_wps_json = os.path.join(airdrops_json_folder,'airdrops_suas.json')
 airdrop_wps = load_airdrop_wps(airdrop_wps_json)
 print("Found ODLC object - Going to drop dem bombs")
 airdrops(airdrop_wps[0])
-check_status(airdrop_wps[0]['latitude'],airdrop_wps[0]['longitude'])
-Script.Sleep(2000)
-print("Sending servo command")
-MAV.doCommand(MAVLink.MAV_CMD.DO_SET_SERVO,9,400,0,0,0,0,0)
-print("sent servo command")
-Script.Sleep(4000)
 Script.ChangeMode('RTL')
 print("Coming Home ")
