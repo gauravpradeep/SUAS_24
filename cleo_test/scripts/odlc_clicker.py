@@ -5,10 +5,17 @@ from pyproj import Proj, transform
 import socket
 import json
 
-focal_length = 0.01  
-sensor_width = 0.014  
-sensor_height = 0.007   
-altitude = 9.15
+
+with open('C:/Users/maxim/gaurav/suas24/cleo_test/scripts/config.json', 'r') as config_file:
+    config = json.load(config_file)
+
+'''
+Relevant params in calculating gps coordintes of odlc objects
+'''    
+focal_length = config['FOCAL_LENGTH']  
+sensor_width = config['SENSOR_WIDTH']
+sensor_height = config['SENSOR_HEIGHT']   
+altitude = config['ALTITUDE']
 
 def gps_to_utm(lat, lon):
     proj_utm = Proj(proj='utm', zone=43, ellps='WGS84')
@@ -62,8 +69,7 @@ for filename in os.listdir(folder_path):
 
 data_to_send = {"waypoints": waypoints}
 
-# Network parameters - adjust these to suit your setup
-host = '127.0.0.1'  # IP address of the receiving computer
-port = 6969            # Port number
+host = config["GCS_SERVER_IP"]
+port = config["AIRDROPS_PORT"] 
 
 send_data(data_to_send, host, port)

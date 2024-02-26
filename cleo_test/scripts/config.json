@@ -1,0 +1,13 @@
+{
+    "ALT": 30,
+    "AIRDROPS_PORT": 50579,
+    "AIRDROPS_JSON_FOLDER": "C:/Users/maxim/gaurav/suas24/cleo_test/missions/airdrop_coords",
+    "PROXIMITY_THRESHOLD": 0.7,
+    "LAP_WAYPOINTS_JSON": "C:/Users/maxim/gaurav/suas24/cleo_test/missions/waypoints/test_wps.json",
+    "COVERAGE_WAYPOINTS_JSON": "C:/Users/maxim/gaurav/suas24/cleo_test/missions/coverage_wps/test_coverage_wps.json",
+    "FOCAL_LENGTH": 0.01,
+    "SENSOR_WIDTH": 0.014,
+    "SENSOR_HEIGHT": 0.007,
+    "ALTITUDE": 9.15,
+    "GCS_SERVER_IP": "169.254.7.23"
+}

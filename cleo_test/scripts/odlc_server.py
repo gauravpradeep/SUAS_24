@@ -36,7 +36,7 @@ def receive_frames():
             data = data[msg_size:]
 
             frame, mav_data = pickle.loads(frame_data)
-            save_image(frame, mav_data)  # Pass mav_data as a single argument
+            save_image(frame, mav_data)  
 
     finally:
         conn.close()
