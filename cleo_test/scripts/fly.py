@@ -21,7 +21,7 @@ FT_TO_MT : Conversion factor for feet to metres since all altitudes in mission p
 ALT : Initial takeoff altitude in feet
 '''
 
-with open('C:/Users/maxim/gaurav/suas24/cleo_test/scripts/config.json', 'r') as config_file:
+with open('C:/Users/maxim/gaurav/suas24/cleo_test/scripts/gcs_config.json', 'r') as config_file:
     config = json.load(config_file)
 
 FT_TO_MT = 3.28084
@@ -159,10 +159,10 @@ def upload_mission(waypoints):
     Script.Sleep(1000)
     check_status(waypoints[-1]['latitude'],waypoints[-1]['longitude'])
 
-def airdrops(airdrop_wp):
+def perdorm_airdrop(airdrop_wp,pin_number,pwm_value):
 
     '''
-    Takes one airdrop coordinate and performs drop, need to update to make pin number a param for
+    Takes one airdrop coordinate and performs drop of payload attaced to specified servo pin
     '''
     Script.ChangeMode("Guided")
     item = MissionPlanner.Utilities.Locationwp() # creating waypoint
@@ -174,7 +174,7 @@ def airdrops(airdrop_wp):
     check_status(airdrop_wp['latitude'],airdrop_wp['longitude'])
     Script.Sleep(2000)
     print("Sending servo command")
-    MAV.doCommand(MAVLink.MAV_CMD.DO_SET_SERVO,9,400,0,0,0,0,0)
+    MAV.doCommand(MAVLink.MAV_CMD.DO_SET_SERVO,pin_number,pwm_value,0,0,0,0,0)
     print("Sent Servo Command")
     Script.Sleep(3000)
 
@@ -222,17 +222,16 @@ def come_home():
     
 def main():
     
-
     mission = load_waypoints(config["LAP_WAYPOINTS_JSON"])
     coverage_waypoints = load_coverage_wps(config["COVERAGE_WAYPOINTS_JSON"])
     mission.extend(coverage_waypoints)
 
     arm_and_takeoff(ALT)
     upload_mission(mission)
-    # start_server(host, port, airdrops_json_folder)
-    airdrop_wps_json = os.path.join(AIRDROPS_JSON_FOLDER,'airdrops_suas.json')
+    # start_server(HOST, PORT, AIRDROPS_JSON_FOLDER)
+    airdrop_wps_json = os.path.join(AIRDROPS_JSON_FOLDER,config["AIRDROPS_JSON_FILENAME"])
     airdrop_wps = load_airdrop_wps(airdrop_wps_json)
-    airdrops(airdrop_wps[0])
+    perdorm_airdrop(airdrop_wps[0],9,400)
 
     come_home()
 

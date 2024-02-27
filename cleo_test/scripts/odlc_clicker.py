@@ -6,7 +6,7 @@ import socket
 import json
 
 
-with open('C:/Users/maxim/gaurav/suas24/cleo_test/scripts/config.json', 'r') as config_file:
+with open('C:/Users/maxim/gaurav/suas24/cleo_test/scripts/odlc_config.json', 'r') as config_file:
     config = json.load(config_file)
 
 '''

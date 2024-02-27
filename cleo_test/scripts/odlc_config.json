@@ -1,0 +1,7 @@
+{
+    "FOCAL_LENGTH": 0.01,
+    "SENSOR_WIDTH": 0.014,
+    "SENSOR_HEIGHT": 0.007,
+    "ALTITUDE": 9.15,
+    "GCS_SERVER_IP": "169.254.7.23"
+}
