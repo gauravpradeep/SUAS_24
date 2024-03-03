@@ -223,16 +223,20 @@ def come_home():
 def main():
     
     mission = load_waypoints(config["LAP_WAYPOINTS_JSON"])
+    test=mission.copy()
+    # print(mission)
     coverage_waypoints = load_coverage_wps(config["COVERAGE_WAYPOINTS_JSON"])
-    mission.extend(coverage_waypoints)
-
+    mission1=mission.extend(coverage_waypoints)
+    # print(mission)
     arm_and_takeoff(ALT)
     upload_mission(mission)
     # start_server(HOST, PORT, AIRDROPS_JSON_FOLDER)
     airdrop_wps_json = os.path.join(AIRDROPS_JSON_FOLDER,config["AIRDROPS_JSON_FILENAME"])
     airdrop_wps = load_airdrop_wps(airdrop_wps_json)
     perdorm_airdrop(airdrop_wps[0],9,400)
+    upload_mission(test)
+    print("done")
 
-    come_home()
+    # come_home()
 
 main()
