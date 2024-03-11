@@ -5,6 +5,7 @@ import json
 import math
 from math import sin, cos, sqrt, atan2, radians, degrees, asin
 import socket
+
 # Assuming the configuration file path is accessible and correct
 config_file_path = 'odlc_config.json'  # Update this path
 
@@ -12,12 +13,10 @@ config_file_path = 'odlc_config.json'  # Update this path
 with open(config_file_path, 'r') as config_file:
     config = json.load(config_file)
 
-# Configuration parameters
-focal_length = config['FOCAL_LENGTH']
+# Configuration parameters for sensor dimensions and focal length
 sensor_width = config['SENSOR_WIDTH']
 sensor_height = config['SENSOR_HEIGHT']
-altitude = config['ALTITUDE']
-drone_yaw = 0  # Assuming a fixed yaw for simplicity, update as needed
+focal_length = config['FOCAL_LENGTH']
 
 def calculate_gsd(altitude, sensor_dim, focal_length, image_dim):
     """
@@ -29,7 +28,8 @@ def calculate_destination(lat1_deg, long1_deg, d_km, theta_deg):
     """
     Calculate destination coordinates given starting point, distance, and bearing.
     """
-    R = 6371.0  # Earth's radius in kilometers
+    # Earth's radius in kilometers
+    R = 6371.0
     lat1 = radians(lat1_deg)
     long1 = radians(long1_deg)
     theta = radians(theta_deg)
@@ -43,7 +43,10 @@ def process_image(filename, all_waypoints, base_filename):
     """
     Process each image for clicking and calculating coordinates.
     """
-    lat, lon = map(float, base_filename[:-4].split('_'))
+    parts = base_filename[:-4].split('_')
+    lat, lon, altitude, drone_yaw = map(float, parts)
+    altitude = altitude  # Now using altitude from filename
+    drone_yaw = drone_yaw  # Now using drone yaw from filename
 
     image = imread(filename)
     image_height, image_width, _ = image.shape
@@ -56,7 +59,7 @@ def process_image(filename, all_waypoints, base_filename):
         
         # Calculate pixel offsets from image center
         pixel_offset_x = ix - (image_width / 2)
-        pixel_offset_y = (image_height / 2) - iy  # Adjusting for image coordinate system
+        pixel_offset_y = (image_height / 2) - iy
         
         # Convert pixel offsets to meters using GSD
         offset_x_meters = pixel_offset_x * gsd
@@ -65,9 +68,10 @@ def process_image(filename, all_waypoints, base_filename):
         # Calculate distance in meters and convert to kilometers
         distance_km = sqrt(offset_x_meters**2 + offset_y_meters**2) / 1000
         
-        # Assume a simple bearing calculation (due North)
+        # Bearing calculation adjusted with drone_yaw
         bearing_deg = degrees(atan2(offset_x_meters, offset_y_meters))
         
+        # Calculate new coordinates considering drone_yaw
         clicked_lat, clicked_lon = calculate_destination(lat, lon, distance_km, bearing_deg + drone_yaw)
         
         all_waypoints.append({"latitude": clicked_lat, "longitude": clicked_lon})
@@ -75,6 +79,7 @@ def process_image(filename, all_waypoints, base_filename):
 
     cid = fig.canvas.mpl_connect('button_press_event', onclick)
     plt.show()
+
 
 def send_data(data, host, port):
     """
