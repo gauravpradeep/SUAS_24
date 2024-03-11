@@ -4,7 +4,7 @@ from matplotlib.image import imread
 import json
 import math
 from math import sin, cos, sqrt, atan2, radians, degrees, asin
-
+import socket
 # Assuming the configuration file path is accessible and correct
 config_file_path = 'odlc_config.json'  # Update this path
 
@@ -76,7 +76,17 @@ def process_image(filename, all_waypoints, base_filename):
     cid = fig.canvas.mpl_connect('button_press_event', onclick)
     plt.show()
 
-folder_path = "../images"  # Update this path
+def send_data(data, host, port):
+    """
+    Send data to the specified server.
+    """
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((host, port))
+        s.sendall(json.dumps(data).encode('utf-8'))
+        s.sendall("END_OF_DATA".encode('utf-8'))
+        
+
+folder_path = "../images" 
 waypoints = []
 
 for filename in os.listdir(folder_path):
@@ -85,4 +95,8 @@ for filename in os.listdir(folder_path):
         process_image(os.path.join(folder_path, filename), waypoints, base_filename)
 
 data_to_send = {"waypoints": waypoints}
-print(json.dumps(data_to_send, indent=4))
+print(waypoints)
+# host = config["GCS_SERVER_IP"]
+# port = config["AIRDROPS_PORT"]
+
+# send_data(data_to_send, host, port)
