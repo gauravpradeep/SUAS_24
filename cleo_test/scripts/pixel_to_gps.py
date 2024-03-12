@@ -6,14 +6,11 @@ import math
 from math import sin, cos, sqrt, atan2, radians, degrees, asin
 import socket
 
-# Assuming the configuration file path is accessible and correct
-config_file_path = 'odlc_config.json'  # Update this path
+config_file_path = 'odlc_config.json' 
 
-# Load configuration
 with open(config_file_path, 'r') as config_file:
     config = json.load(config_file)
 
-# Configuration parameters for sensor dimensions and focal length
 sensor_width = config['SENSOR_WIDTH']
 sensor_height = config['SENSOR_HEIGHT']
 focal_length = config['FOCAL_LENGTH']
@@ -22,13 +19,12 @@ def calculate_gsd(altitude, sensor_dim, focal_length, image_dim):
     """
     Calculate the Ground Sample Distance (GSD).
     """
-    return (altitude * sensor_dim) / (focal_length * image_dim)
+    return (altitude * sensor_dim) / (focal_length * image_dim*100)
 
 def calculate_destination(lat1_deg, long1_deg, d_km, theta_deg):
     """
     Calculate destination coordinates given starting point, distance, and bearing.
     """
-    # Earth's radius in kilometers
     R = 6371.0
     lat1 = radians(lat1_deg)
     long1 = radians(long1_deg)
@@ -45,8 +41,10 @@ def process_image(filename, all_waypoints, base_filename):
     """
     parts = base_filename[:-4].split('_')
     lat, lon, altitude, drone_yaw = map(float, parts)
-    altitude = altitude  # Now using altitude from filename
-    drone_yaw = drone_yaw  # Now using drone yaw from filename
+    altitude = altitude  
+    drone_yaw = drone_yaw
+    if drone_yaw<0:
+        drone_yaw+=360 
 
     image = imread(filename)
     image_height, image_width, _ = image.shape
@@ -57,25 +55,26 @@ def process_image(filename, all_waypoints, base_filename):
         ix, iy = event.xdata, event.ydata
         gsdW = calculate_gsd(altitude, sensor_width, focal_length, image_width)
         gsdH = calculate_gsd(altitude, sensor_height, focal_length, image_height)
+        print(f"gsdW: {gsdW} m/px, gsdH: {gsdH} m/px")
         
-        
-        # Calculate pixel offsets from image center
         pixel_offset_x = ix - (image_width / 2)
         pixel_offset_y = (image_height / 2) - iy
-
+        
         offset_x_meters = pixel_offset_x * gsdW
         offset_y_meters = pixel_offset_y * gsdH
-        angle_rad = atan2(offset_x_meters, offset_y_meters)
+        angle_rad = atan2(offset_x_meters,offset_y_meters)
         angle_deg = degrees(angle_rad)
         if angle_deg<0:
             angle_deg+=360
             
         distance_km = sqrt(offset_x_meters**2 + offset_y_meters**2) / 1000
+        print(f"Distance from drone: {distance_km} km")
         print(f"Angle from the vertical axis: {angle_deg:.2f} degrees")
-        print(f"Global heading from current lat_lon {(angle_deg+90)%360}")
-        # clicked_lat, clicked_lon = calculate_destination(lat, lon, distance_km, (angle_deg + drone_yaw)%360)
+        print(f"Global heading from current lat_lon {(angle_deg+drone_yaw)%360}")
+        clicked_lat, clicked_lon = calculate_destination(lat, lon, distance_km, (angle_deg + drone_yaw)%360)
+        print(f"Clicked lat: {clicked_lat}, lon: {clicked_lon}")
         
-        # all_waypoints.append({"latitude": clicked_lat, "longitude": clicked_lon})
+        all_waypoints.append({"latitude": clicked_lat, "longitude": clicked_lon})
         plt.close(fig)
 
     cid = fig.canvas.mpl_connect('button_press_event', onclick)

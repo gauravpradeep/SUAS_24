@@ -50,13 +50,10 @@ ax.set_aspect('equal')
 plt.show()
 
 
-# Convert the UTM centroids to GPS coordinates
 gps_centroids = [utm_to_gps(utm_proj, point.x, point.y) for point in centroids]
 gps_centroids_dict = {"waypoints": [{"latitude": lat, "longitude": lon, "altitude": 80 } for lat, lon in gps_centroids]}
 
-# File path for the JSON file
 json_file_path = '../missions/coverage_wps/test_coverage_wps.json'
 
-# Write the GPS centroids to a JSON file
 with open(json_file_path, 'w') as json_file:
     json.dump(gps_centroids_dict, json_file, indent=4)
