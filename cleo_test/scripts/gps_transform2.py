@@ -55,26 +55,27 @@ def process_image(filename, all_waypoints, base_filename):
 
     def onclick(event):
         ix, iy = event.xdata, event.ydata
-        gsd = calculate_gsd(altitude, sensor_width, focal_length, image_width)
+        gsdW = calculate_gsd(altitude, sensor_width, focal_length, image_width)
+        gsdH = calculate_gsd(altitude, sensor_height, focal_length, image_height)
+        
         
         # Calculate pixel offsets from image center
         pixel_offset_x = ix - (image_width / 2)
         pixel_offset_y = (image_height / 2) - iy
-        
-        # Convert pixel offsets to meters using GSD
-        offset_x_meters = pixel_offset_x * gsd
-        offset_y_meters = pixel_offset_y * gsd
-        
-        # Calculate distance in meters and convert to kilometers
+
+        offset_x_meters = pixel_offset_x * gsdW
+        offset_y_meters = pixel_offset_y * gsdH
+        angle_rad = atan2(offset_x_meters, offset_y_meters)
+        angle_deg = degrees(angle_rad)
+        if angle_deg<0:
+            angle_deg+=360
+            
         distance_km = sqrt(offset_x_meters**2 + offset_y_meters**2) / 1000
+        print(f"Angle from the vertical axis: {angle_deg:.2f} degrees")
+        print(f"Global heading from current lat_lon {(angle_deg+90)%360}")
+        # clicked_lat, clicked_lon = calculate_destination(lat, lon, distance_km, (angle_deg + drone_yaw)%360)
         
-        # Bearing calculation adjusted with drone_yaw
-        bearing_deg = degrees(atan2(offset_x_meters, offset_y_meters))
-        
-        # Calculate new coordinates considering drone_yaw
-        clicked_lat, clicked_lon = calculate_destination(lat, lon, distance_km, bearing_deg + drone_yaw)
-        
-        all_waypoints.append({"latitude": clicked_lat, "longitude": clicked_lon})
+        # all_waypoints.append({"latitude": clicked_lat, "longitude": clicked_lon})
         plt.close(fig)
 
     cid = fig.canvas.mpl_connect('button_press_event', onclick)
