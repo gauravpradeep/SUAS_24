@@ -1,5 +1,5 @@
 {
-    "ALT": 30,
+    "TAKEOFF_ALT": 80,
     "AIRDROPS_PORT": 50579,
     "AIRDROPS_JSON_FOLDER": "C:/Users/maxim/gaurav/suas24/cleo_test/missions/airdrop_coords",
     "AIRDROPS_JSON_FILENAME": "airdrops_suas.json",

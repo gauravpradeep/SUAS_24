@@ -27,7 +27,7 @@ with open('C:/Users/maxim/gaurav/suas24/cleo_test/scripts/gcs_config.json', 'r')
 FT_TO_MT = 3.28084
 HOST = '0.0.0.0'
 RADIUS_OF_EARTH = 6371000.0
-ALT = config["ALT"]
+TAKEOFF_ALT = config["TAKEOFF_ALT"]
 PORT = config["AIRDROPS_PORT"]
 AIRDROPS_JSON_FOLDER = config["AIRDROPS_JSON_FOLDER"]
 PROXIMITY_THRESHOLD = config["PROXIMITY_THRESHOLD"]
@@ -117,7 +117,7 @@ def load_airdrop_wps(file_path):
         data = json.load(file)
     return data["waypoints"]
 
-def check_status(final_lat,final_lon):
+def check_status(final_lat,final_lon,no_of_waypoints):
 
     '''
     Checks whether the drone is within the distance threshold to the given lat,lon
@@ -127,11 +127,21 @@ def check_status(final_lat,final_lon):
     global proximity_threshold
 
     while True:
-        current_location = f"{cs.lat},{cs.lng}"
-        if haversine_dist(cs.lat,cs.lng,final_lat,final_lon) <= PROXIMITY_THRESHOLD:
+        if haversine_dist(cs.lat,cs.lng,final_lat,final_lon) <= PROXIMITY_THRESHOLD and cs.wpno == no_of_waypoints:
             break
         else:
-            Script.Sleep(500)
+            print("Current waypoint : ",cs.wpno)
+            Script.Sleep(1000)
+
+def start_mission(mission):
+    '''
+    Checks whether the drone is in a mission
+    '''
+    # upload_mission(mission)
+    Script.Sleep(500)
+    print("Starting Mission")
+    Script.ChangeMode('Auto')
+    check_status(mission[-1]['latitude'],mission[-1]['longitude'],len(mission))
 
 def upload_mission(waypoints):
 
@@ -153,11 +163,8 @@ def upload_mission(waypoints):
         MAV.setWP(waypoint, i + 1, MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT)
 
     MAV.setWPACK()
-    Script.Sleep(2000)
-    print("Starting Mission")
-    Script.ChangeMode('Auto')
+    print("No of waypoints : ",MAV.getWPCount())
     Script.Sleep(1000)
-    check_status(waypoints[-1]['latitude'],waypoints[-1]['longitude'])
 
 def perdorm_airdrop(airdrop_wp,pin_number,pwm_value):
 
@@ -223,20 +230,16 @@ def come_home():
 def main():
     
     mission = load_waypoints(config["LAP_WAYPOINTS_JSON"])
-    # test=mission.copy()
-    # print(mission)
     coverage_waypoints = load_coverage_wps(config["COVERAGE_WAYPOINTS_JSON"])
     mission.extend(coverage_waypoints)
-    # print(mission)
-    arm_and_takeoff(ALT)
+    arm_and_takeoff(TAKEOFF_ALT)
     upload_mission(mission)
+    start_mission(mission)
     # start_server(HOST, PORT, AIRDROPS_JSON_FOLDER)
     # airdrop_wps_json = os.path.join(AIRDROPS_JSON_FOLDER,config["AIRDROPS_JSON_FILENAME"])
     # airdrop_wps = load_airdrop_wps(airdrop_wps_json)
     # perdorm_airdrop(airdrop_wps[0],9,400)
-    # upload_mission(test)
-    print("done")
-
-    # come_home()
+     
+    come_home()
 
 main()
