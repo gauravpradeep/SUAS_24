@@ -10,6 +10,7 @@ import MissionPlanner
 clr.AddReference("MissionPlanner.Utilities") # includes the Utilities class
 from MissionPlanner.Utilities import Locationwp
 clr.AddReference("MAVLink") # includes the Utilities class
+from MAVLink import mavlink_set_position_target_local_ned_t
 import MAVLink
 import socket
 import json
@@ -159,6 +160,41 @@ def upload_mission(waypoints):
     Script.Sleep(1000)
     check_status(waypoints[-1]['latitude'],waypoints[-1]['longitude'],len(waypoints))
 
+def local_airdrop(path):
+    '''
+    Performs a local airdrop at a specified location
+    Params:
+    path : path to json file containing airdrop coordinates
+    '''
+    Script.ChangeMode("Guided")
+    with open(path, 'r') as file:
+        data = json.load(file)
+
+    for airdrop in data["waypoints"]:
+
+        item = MissionPlanner.Utilities.Locationwp() # creating waypoint
+        Locationwp.lat.SetValue(item,airdrop['latitude']) # sets latitude
+        Locationwp.lng.SetValue(item,airdrop['longitude']) # sets longitude
+        Locationwp.alt.SetValue(item,85/FT_TO_MT) # sets altitude
+        MAV.setGuidedModeWP(item)
+        Script.Sleep(5000)
+        MAV.doCommand(MAVLink.MAV_CMD.CONDITION_YAW,airdrop['yaw'],10,0,0,0,0,0)
+        Script.Sleep(3000)
+
+        command = mavlink_set_position_target_local_ned_t()
+
+        mavlink_set_position_target_local_ned_t.coordinate_frame.SetValue(command, 9)
+        mavlink_set_position_target_local_ned_t.type_mask.SetValue(command, 0b0000111111111000)
+        mavlink_set_position_target_local_ned_t.x.SetValue(command, airdrop['y_coordinate']) 
+        mavlink_set_position_target_local_ned_t.y.SetValue(command, airdrop['x_coordinate'])
+        mavlink_set_position_target_local_ned_t.z.SetValue(command, 0) 
+        target_system = 1
+        target_component = 1
+
+        MAV.sendPacket(command, target_system, target_component)
+        Script.Sleep(5000)
+       
+
 def perdorm_airdrop(airdrop_wp,pin_number,pwm_value):
 
     '''
@@ -223,20 +259,19 @@ def come_home():
 def main():
     
     mission = load_waypoints(config["LAP_WAYPOINTS_JSON"])
-    # test=mission.copy()
-    # print(mission)
     coverage_waypoints = load_coverage_wps(config["COVERAGE_WAYPOINTS_JSON"])
     mission.extend(coverage_waypoints)
-    # print(mission)
     arm_and_takeoff(TAKEOFF_ALT)
     upload_mission(mission)
     # start_server(HOST, PORT, AIRDROPS_JSON_FOLDER)
     # airdrop_wps_json = os.path.join(AIRDROPS_JSON_FOLDER,config["AIRDROPS_JSON_FILENAME"])
     # airdrop_wps = load_airdrop_wps(airdrop_wps_json)
-    # perdorm_airdrop(airdrop_wps[0],9,400)
+    airdrop_wps_json = "C:/Users/maxim/gaurav/suas24/cleo_test/scripts/image_data.json"
+    local_airdrop(airdrop_wps_json)
     # upload_mission(test)
-    print("done")
+    # print("done")
 
-    come_home()
+    # come_home()
 
 main()
+ 
