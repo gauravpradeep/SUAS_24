@@ -2,6 +2,8 @@ import os
 import matplotlib.pyplot as plt
 from matplotlib.image import imread
 import json
+from math import sin, cos, sqrt, atan2, radians, degrees, asin
+import socket
 
 config_file_path = 'odlc_config.json' 
 
@@ -37,7 +39,9 @@ def process_image(filename):
     the clicked coordinates and the image's original data (latitude, longitude, yaw).
     """
     latitude, longitude, altitude, yaw = extract_metadata_from_filename(filename)
-    
+    if yaw<0:
+        yaw+=360
+        
     image = imread(filename)
     image_height, image_width, _ = image.shape
     fig, ax = plt.subplots()
@@ -59,12 +63,20 @@ def process_image(filename):
         pixel_offset_y = (image_height / 2) - iy
         gsdW = calculate_gsd(altitude, sensor_width, focal_length, image_width)
         gsdH = calculate_gsd(altitude, sensor_height, focal_length, image_height)
+        
+        offset_x_meters = pixel_offset_x * gsdW
+        offset_y_meters = pixel_offset_y * gsdH
+        angle_rad = atan2(offset_x_meters,offset_y_meters)
+        angle_deg = degrees(angle_rad)
+        if angle_deg<0:
+            angle_deg+=360
+        
         return {
             'latitude': latitude,
             'longitude': longitude,
-            'yaw': yaw,
-            'x_coordinate': pixel_offset_x*gsdW,
-            'y_coordinate': pixel_offset_y*gsdH
+            'yaw': (angle_deg+yaw)%360,
+            'x_coordinate': offset_x_meters,
+            'y_coordinate': offset_y_meters
         }
     else:
         return None
@@ -79,5 +91,21 @@ for filename in os.listdir(folder_path):
         if image_data:
             data.append(image_data)
 
+def send_data(data, host, port):
+    """
+    Send data to the specified server.
+    """
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((host, port))
+        s.sendall(json.dumps(data).encode('utf-8'))
+        s.sendall("END_OF_DATA".encode('utf-8'))
+        
+data_to_send = {"waypoints": data}
 with open('image_data.json', 'w') as json_file:
-    json.dump(data, json_file, indent=4)
+    json.dump(data_to_send, json_file, indent=4)
+    
+print(data_to_send)
+# host = config["GCS_SERVER_IP"]
+# port = config["AIRDROPS_PORT"]
+
+# send_data(data_to_send, host, port)
