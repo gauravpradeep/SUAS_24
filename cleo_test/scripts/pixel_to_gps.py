@@ -14,6 +14,7 @@ with open(config_file_path, 'r') as config_file:
 sensor_width = config['SENSOR_WIDTH']
 sensor_height = config['SENSOR_HEIGHT']
 focal_length = config['FOCAL_LENGTH']
+altitude = config['ALTITUDE']
 
 def calculate_gsd(altitude, sensor_dim, focal_length, image_dim):
     """
@@ -41,7 +42,7 @@ def process_image(filename, all_waypoints, base_filename):
     """
     parts = base_filename[:-4].split('_')
     lat, lon, altitude, drone_yaw = map(float, parts)
-    altitude = altitude  
+    # altitude = altitude  
     drone_yaw = drone_yaw
     if drone_yaw<0:
         drone_yaw+=360 
@@ -68,16 +69,17 @@ def process_image(filename, all_waypoints, base_filename):
             angle_deg+=360
             
         distance_km = sqrt(offset_x_meters**2 + offset_y_meters**2) / 1000
-        print(f"Distance from drone: {distance_km} km")
+        # print(f"Distance from drone: {distance_km} km")
         print(f"Angle from the vertical axis: {angle_deg:.2f} degrees")
         print(f"Global heading from current lat_lon {(angle_deg+drone_yaw)%360}")
         clicked_lat, clicked_lon = calculate_destination(lat, lon, distance_km, (angle_deg + drone_yaw)%360)
+        print(f"Distance : {distance_km*1000}")
         print(f"Clicked lat: {clicked_lat}, lon: {clicked_lon}")
         
         all_waypoints.append({"latitude": clicked_lat, "longitude": clicked_lon})
         plt.close(fig)
 
-    cid = fig.canvas.mpl_connect('button_press_event', onclick)
+    fig.canvas.mpl_connect('button_press_event', onclick)
     plt.show()
 
 

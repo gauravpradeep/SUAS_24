@@ -168,7 +168,7 @@ def perdorm_airdrop(airdrop_wp,pin_number,pwm_value):
     item = MissionPlanner.Utilities.Locationwp() # creating waypoint
     Locationwp.lat.SetValue(item,airdrop_wp['latitude']) # sets latitude
     Locationwp.lng.SetValue(item,airdrop_wp['longitude']) # sets longitude
-    Locationwp.alt.SetValue(item,30/FT_TO_MT) # sets altitude
+    Locationwp.alt.SetValue(item,85/FT_TO_MT) # sets altitude
     MAV.setGuidedModeWP(item)
     print("Found ODLC object - Going to drop dem bombs")
     check_status(airdrop_wp['latitude'],airdrop_wp['longitude'])
