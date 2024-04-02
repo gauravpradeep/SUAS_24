@@ -118,6 +118,22 @@ def load_airdrop_wps(file_path):
         data = json.load(file)
     return data["waypoints"]
 
+def check_proximity(final_lat,final_lon):
+
+    '''
+    Checks whether the drone is within the distance threshold to the given lat,lon
+    Params:
+    final_lat, final_long : coordinates of last point of a mission at any time 
+    '''
+    global proximity_threshold
+
+    while True:
+        current_location = f"{cs.lat},{cs.lng}"
+        if haversine_dist(cs.lat,cs.lng,final_lat,final_lon) <= PROXIMITY_THRESHOLD:
+            break
+        else:
+            Script.Sleep(500)
+            
 def check_status(final_lat,final_lon,no_of_waypoints):
 
     '''
@@ -152,10 +168,10 @@ def upload_mission(waypoints):
         MAV.setWP(waypoint, i + 1, MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT)
 
     MAV.setWPACK()
-    Script.Sleep(2000)
+    Script.Sleep(500)
     print("Starting Mission")
     Script.ChangeMode('Auto')
-    Script.Sleep(1000)
+    Script.Sleep(2000)
     check_status(waypoints[-1]['latitude'],waypoints[-1]['longitude'],len(waypoints))
 
 def local_airdrop(airdrop):
@@ -171,7 +187,9 @@ def local_airdrop(airdrop):
     Locationwp.lng.SetValue(item,airdrop['longitude'])
     Locationwp.alt.SetValue(item,85/FT_TO_MT) 
     MAV.setGuidedModeWP(item)
-    Script.Sleep(5000)
+    check_proximity(airdrop['latitude'],airdrop['longitude'])
+    # Script.Sleep(5000)
+    
     MAV.doCommand(MAVLink.MAV_CMD.CONDITION_YAW,airdrop['yaw'],10,0,0,0,0,0)
     Script.Sleep(3000)
 
@@ -187,7 +205,6 @@ def local_airdrop(airdrop):
 
     MAV.sendPacket(command, target_system, target_component)
     Script.Sleep(5000)
-       
 
 def perdorm_airdrop(airdrop_wp,pin_number,pwm_value):
 
@@ -251,7 +268,6 @@ def come_home():
     print("Coming Home ")
     
 def main():
-    
     mission = load_lap_waypoints(config["LAP_WAYPOINTS_JSON"])
     coverage_waypoints = load_coverage_wps(config["COVERAGE_WAYPOINTS_JSON"])
     mission.extend(coverage_waypoints)
