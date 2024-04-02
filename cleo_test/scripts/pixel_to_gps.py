@@ -14,11 +14,7 @@ with open(config_file_path, 'r') as config_file:
 sensor_width = config['SENSOR_WIDTH']
 sensor_height = config['SENSOR_HEIGHT']
 focal_length = config['FOCAL_LENGTH']
-<<<<<<< HEAD
-altitude = config['ALTITUDE']
-=======
 # altitude = config['ALTITUDE']
->>>>>>> d5d1102f9e93811073e5fe5a60335c1666107baf
 
 def calculate_gsd(altitude, sensor_dim, focal_length, image_dim):
     """

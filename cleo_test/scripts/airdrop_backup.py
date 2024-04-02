@@ -100,7 +100,7 @@ def send_data(data, host, port):
         s.sendall(json.dumps(data).encode('utf-8'))
         s.sendall("END_OF_DATA".encode('utf-8'))
         
-data_to_send = {"waypoints": data}
+data_to_send = {"airdrops": data}
 with open('image_data.json', 'w') as json_file:
     json.dump(data_to_send, json_file, indent=4)
     
