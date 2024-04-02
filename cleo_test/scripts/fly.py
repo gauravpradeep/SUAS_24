@@ -158,7 +158,7 @@ def upload_mission(waypoints):
     Script.Sleep(1000)
     check_status(waypoints[-1]['latitude'],waypoints[-1]['longitude'],len(waypoints))
 
-def local_airdrop():
+def local_airdrop(airdrop):
     '''
     Performs airdrop using local frame coordinates after going to the coordinate at which the image was clicked
     Params:
