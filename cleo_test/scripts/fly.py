@@ -75,7 +75,7 @@ def arm_and_takeoff(alt):
         MAV.doARM(True)
         Script.Sleep(1000)
         
-    Script.Sleep(1000)
+    Script.Sleep(1500)
     print(f"Taking off to {alt} feet")
     Script.ChangeMode('Guided')
     MAV.doCommand(MAVLink.MAV_CMD.TAKEOFF,0,0,0,0,0,0,alt/FT_TO_MT)
@@ -134,6 +134,8 @@ def check_proximity(final_lat,final_lon):
         else:
             Script.Sleep(500)
             
+    Script.Sleep(1000)
+
 def check_status(final_lat,final_lon,no_of_waypoints):
 
     '''
@@ -215,15 +217,15 @@ def perdorm_airdrop(airdrop_wp,pin_number,pwm_value):
     item = MissionPlanner.Utilities.Locationwp() # creating waypoint
     Locationwp.lat.SetValue(item,airdrop_wp['latitude']) # sets latitude
     Locationwp.lng.SetValue(item,airdrop_wp['longitude']) # sets longitude
-    Locationwp.alt.SetValue(item,85/FT_TO_MT) # sets altitude
+    Locationwp.alt.SetValue(item,airdrop_wp['altitude']/FT_TO_MT) # sets altitude
     MAV.setGuidedModeWP(item)
     print("Found ODLC object - Going to drop dem bombs")
-    check_status(airdrop_wp['latitude'],airdrop_wp['longitude'])
+    check_proximity(airdrop_wp['latitude'],airdrop_wp['longitude'])
     Script.Sleep(2000)
     print("Sending servo command")
     MAV.doCommand(MAVLink.MAV_CMD.DO_SET_SERVO,pin_number,pwm_value,0,0,0,0,0)
     print("Sent Servo Command")
-    Script.Sleep(3000)
+    Script.Sleep(5000)
 
 def start_server(host, port, save_path):
 
@@ -274,17 +276,19 @@ def main():
     arm_and_takeoff(TAKEOFF_ALT)
     upload_mission(mission)
     # start_server(HOST, PORT, AIRDROPS_JSON_FOLDER)
-    # airdrop_wps_json = os.path.join(AIRDROPS_JSON_FOLDER,config["AIRDROPS_JSON_FILENAME"])
-    airdrop_wps = load_airdrop_wps(airdrop_wps_json)
-    airdrop_wps_json = "C:/Users/maxim/gaurav/suas24/cleo_test/scripts/image_data.json"
+    airdrop_wps_json = os.path.join(AIRDROPS_JSON_FOLDER,config["AIRDROPS_JSON_FILENAME"])
     airdrop_wps = load_airdrop_wps(airdrop_wps_json)
     for airdrop in airdrop_wps:
-        local_airdrop(airdrop)
+        perdorm_airdrop(airdrop,9,2100)
+    # airdrop_wps_json = "C:/Users/maxim/gaurav/suas24/cleo_test/scripts/image_data.json"
+    # airdrop_wps = load_airdrop_wps(airdrop_wps_json)
+    # for airdrop in airdrop_wps:
+    #     local_airdrop(airdrop)
         
     # upload_mission(test)
     # print("done")
 
-    # come_home()
+    come_home()
 
 main()
  
