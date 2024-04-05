@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from shapely.geometry import Polygon, Point
 import pyproj
-import random
 import json
 
 def utm_to_gps(utm_proj, utm_x, utm_y):
@@ -10,9 +9,13 @@ def utm_to_gps(utm_proj, utm_x, utm_y):
     lon, lat = pyproj.transform(utm_proj, gps_proj, utm_x, utm_y)
     return lat, lon
 
+# Read boundary coordinates from JSON file
+json_file_path = '../missions/6april/coverage_boundary.json'  # Specify the path to your JSON file
+with open(json_file_path, 'r') as json_file:
+    data = json.load(json_file)
 
-latitudes = [13.347838317394102, 13.347766501694263, 13.347763890213866, 13.347844846093022, 13.347838317394102]
-longitudes = [74.7922255768232, 74.79222825861194, 74.79215585031544, 74.79215048673794, 74.7922255768232]
+latitudes = [point['latitude'] for point in data['waypoints']]
+longitudes = [point['longitude'] for point in data['waypoints']]
 
 points = list(zip(longitudes, latitudes))
 
@@ -20,8 +23,8 @@ utm_proj = pyproj.Proj(proj='utm', zone=18, ellps='WGS84')
 utm_points = [utm_proj(lon, lat) for lon, lat in points]
 
 polygon = Polygon(utm_points)
-cell_width = 5
-cell_height = 5
+cell_width = 15
+cell_height = 10
 centroids=[]
 
 min_x, min_y, max_x, max_y = polygon.bounds
@@ -39,7 +42,6 @@ while x < max_x:
         y += cell_height
     x += cell_width
 
-
 fig, ax = plt.subplots()
 for i, cell in enumerate(cells):
     x, y = cell.exterior.xy
@@ -49,11 +51,10 @@ ax.plot(x, y, color='red')
 ax.set_aspect('equal')
 plt.show()
 
-
 gps_centroids = [utm_to_gps(utm_proj, point.x, point.y) for point in centroids]
-gps_centroids_dict = {"waypoints": [{"latitude": lat, "longitude": lon, "altitude": 80 } for lat, lon in gps_centroids]}
+gps_centroids_dict = {"waypoints": [{"latitude": lat, "longitude": lon, "altitude": 80} for lat, lon in gps_centroids]}
 
-json_file_path = '../missions/coverage_wps/test_coverage_wps.json'
-
-with open(json_file_path, 'w') as json_file:
-    json.dump(gps_centroids_dict, json_file, indent=4)
+# Write the GPS centroids to a JSON file
+output_json_file_path = '../missions/6april/coverage_waypoints.json'  # Specify the path to save the output JSON file
+with open(output_json_file_path, 'w') as output_json_file:
+    json.dump(gps_centroids_dict, output_json_file, indent=4)

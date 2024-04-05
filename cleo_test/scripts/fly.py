@@ -276,10 +276,10 @@ def main():
     arm_and_takeoff(TAKEOFF_ALT)
     upload_mission(mission)
     # start_server(HOST, PORT, AIRDROPS_JSON_FOLDER)
-    airdrop_wps_json = os.path.join(AIRDROPS_JSON_FOLDER,config["AIRDROPS_JSON_FILENAME"])
-    airdrop_wps = load_airdrop_wps(airdrop_wps_json)
-    for airdrop in airdrop_wps:
-        perdorm_airdrop(airdrop,9,2100)
+    # airdrop_wps_json = os.path.join(AIRDROPS_JSON_FOLDER,config["AIRDROPS_JSON_FILENAME"])
+    # airdrop_wps = load_airdrop_wps(airdrop_wps_json)
+    # for airdrop in airdrop_wps:
+    #     perdorm_airdrop(airdrop,9,2100)
     # airdrop_wps_json = "C:/Users/maxim/gaurav/suas24/cleo_test/scripts/image_data.json"
     # airdrop_wps = load_airdrop_wps(airdrop_wps_json)
     # for airdrop in airdrop_wps:
