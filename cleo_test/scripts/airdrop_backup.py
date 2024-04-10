@@ -18,7 +18,7 @@ def calculate_gsd(altitude, sensor_dim, focal_length, image_dim):
     """
     Calculate the Ground Sample Distance (GSD).
     """
-    return (altitude * sensor_dim) / (focal_length * image_dim*100)
+    return (altitude * sensor_dim) / (focal_length * image_dim)
 
 def extract_metadata_from_filename(filename):
     """
@@ -41,7 +41,9 @@ def process_image(filename):
     latitude, longitude, altitude, yaw = extract_metadata_from_filename(filename)
     if yaw<0:
         yaw+=360
-        
+    # altitude = altitude - 86
+    # print(altitude)
+    altitude = config["ALTITUDE"]
     image = imread(filename)
     image_height, image_width, _ = image.shape
     fig, ax = plt.subplots()
@@ -63,7 +65,9 @@ def process_image(filename):
         pixel_offset_y = (image_height / 2) - iy
         gsdW = calculate_gsd(altitude, sensor_width, focal_length, image_width)
         gsdH = calculate_gsd(altitude, sensor_height, focal_length, image_height)
-        
+        gsd=max(gsdW,gsdH)
+        print(gsdW, gsdH)
+        # print()
         offset_x_meters = pixel_offset_x * gsdW
         offset_y_meters = pixel_offset_y * gsdH
         angle_rad = atan2(offset_x_meters,offset_y_meters)
@@ -74,14 +78,14 @@ def process_image(filename):
         return {
             'latitude': latitude,
             'longitude': longitude,
-            'yaw': (angle_deg+yaw)%360,
+            'yaw': yaw,
             'x_coordinate': offset_x_meters,
             'y_coordinate': offset_y_meters
         }
     else:
         return None
 
-folder_path = "../images" 
+folder_path = "../images/bigdrone" 
 data = []
 
 for filename in os.listdir(folder_path):
@@ -100,7 +104,7 @@ def send_data(data, host, port):
         s.sendall(json.dumps(data).encode('utf-8'))
         s.sendall("END_OF_DATA".encode('utf-8'))
         
-data_to_send = {"airdrops": data}
+data_to_send = {"waypoints": data}
 with open('image_data.json', 'w') as json_file:
     json.dump(data_to_send, json_file, indent=4)
     

@@ -10,7 +10,7 @@ def utm_to_gps(utm_proj, utm_x, utm_y):
     return lat, lon
 
 # Read boundary coordinates from JSON file
-json_file_path = '../missions/6april/above_football/coverage_boundary.json'  # Specify the path to your JSON file
+json_file_path = '../missions/8april/msap/coverage_boundary.json'  # Specify the path to your JSON file
 with open(json_file_path, 'r') as json_file:
     data = json.load(json_file)
 
@@ -55,6 +55,6 @@ gps_centroids = [utm_to_gps(utm_proj, point.x, point.y) for point in centroids]
 gps_centroids_dict = {"waypoints": [{"latitude": lat, "longitude": lon, "altitude": 45} for lat, lon in gps_centroids]}
 
 # Write the GPS centroids to a JSON file
-output_json_file_path = '../missions/6april/above_football/coverage_waypoints.json'  # Specify the path to save the output JSON file
+output_json_file_path = '../missions/8april/msap/coverage_waypoints.json'  # Specify the path to save the output JSON file
 with open(output_json_file_path, 'w') as output_json_file:
     json.dump(gps_centroids_dict, output_json_file, indent=4)
