@@ -32,6 +32,7 @@ TAKEOFF_ALT = config["TAKEOFF_ALT"]
 PORT = config["AIRDROPS_PORT"]
 AIRDROPS_JSON_FOLDER = config["AIRDROPS_JSON_FOLDER"]
 PROXIMITY_THRESHOLD = config["PROXIMITY_THRESHOLD"]
+AIRDROPS_JSON_FILENAME = config["AIRDROPS_JSON_FILENAME"]
 
 
 idmavcmd = MAVLink.MAV_CMD.WAYPOINT
@@ -194,8 +195,8 @@ def local_airdrop(airdrop,pin_number,pwm_value):
     check_proximity(airdrop['latitude'],airdrop['longitude'])
     # Script.Sleep(5000)
     
-    MAV.doCommand(MAVLink.MAV_CMD.CONDITION_YAW,airdrop['yaw'],10,0,0,0,0,0)
-    Script.Sleep(8000)
+    MAV.doCommand(MAVLink.MAV_CMD.CONDITION_YAW,airdrop['yaw'],15,0,0,0,0,0)
+    Script.Sleep(20000)
 
     command = mavlink_set_position_target_local_ned_t()
 
@@ -261,7 +262,7 @@ def start_server(host, port, save_path):
                 print("Received data:")
                 print(json.dumps(json_data, indent=4))
 
-                file_path = os.path.join(save_path, f"airdrops_suas.json")
+                file_path = os.path.join(save_path, AIRDROPS_JSON_FILENAME)
                 with open(file_path, 'w') as file:
                     json.dump(json_data, file, indent=4)
                 print(f"Data saved to {file_path}")
@@ -276,20 +277,20 @@ def come_home():
     print("Coming Home ")
     
 def main():
-    # mission = load_lap_waypoints(config["LAP_WAYPOINTS_JSON"])
+    mission = load_lap_waypoints(config["LAP_WAYPOINTS_JSON"])
     coverage_waypoints = load_coverage_wps(config["COVERAGE_WAYPOINTS_JSON"])
-    # mission.extend(coverage_waypoints)
+    mission.extend(coverage_waypoints)
     arm_and_takeoff(TAKEOFF_ALT)
-    upload_mission(coverage_waypoints)
+    upload_mission(mission)
     # start_server(HOST, PORT, AIRDROPS_JSON_FOLDER)
     # airdrop_wps_json = os.path.join(AIRDROPS_JSON_FOLDER,config["AIRDROPS_JSON_FILENAME"])
     # airdrop_wps = load_airdrop_wps(airdrop_wps_json)
     # for airdrop in airdrop_wps:
         # perdorm_airdrop(airdrop,10,2100)
-    airdrop_wps_json = "C:/Users/maxim/gaurav/suas24/cleo_test/scripts/image_data.json"
-    airdrop_wps = load_airdrop_wps(airdrop_wps_json)
-    for airdrop in airdrop_wps:
-        local_airdrop(airdrop,10,2100)
+    #airdrop_wps_json = "C:/Users/maxim/gaurav/suas24/cleo_test/scripts/image_data.json"
+    #airdrop_wps = load_airdrop_wps(airdrop_wps_json)
+    # for airdrop in airdrop_wps:
+        # local_airdrop(airdrop,10,2100)
 
         
     # upload_mission(test)
