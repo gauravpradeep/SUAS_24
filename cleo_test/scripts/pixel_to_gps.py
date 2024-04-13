@@ -62,8 +62,8 @@ def process_image(filename, all_waypoints, base_filename):
         pixel_offset_x = ix - (image_width / 2)
         pixel_offset_y = (image_height / 2) - iy
         
-        offset_x_meters = pixel_offset_x * gsdW
-        offset_y_meters = pixel_offset_y * gsdH
+        offset_x_meters = pixel_offset_x * 0.0071
+        offset_y_meters = pixel_offset_y * 0.0071
         angle_rad = atan2(offset_x_meters,offset_y_meters)
         angle_deg = degrees(angle_rad)
         if angle_deg<0:

@@ -289,8 +289,8 @@ def main():
     airdrop_wps = load_airdrop_wps(airdrop_wps_json)
 
     for airdrop in airdrop_wps:
-        local_airdrop(airdrop,10,2100)
-        # perdorm_airdrop(airdrop,10,2100)
+        # local_airdrop(airdrop,10,2100)
+        perdorm_airdrop(airdrop,10,2100)
     airdrop_wps_json = "C:/Users/maxim/gaurav/suas24/cleo_test/scripts/image_data.json"
     airdrop_wps = load_airdrop_wps(airdrop_wps_json)
     # for airdrop in airdrop_wps:
