@@ -14,13 +14,13 @@ with open(config_file_path, 'r') as config_file:
 sensor_width = config['SENSOR_WIDTH']
 sensor_height = config['SENSOR_HEIGHT']
 focal_length = config['FOCAL_LENGTH']
-# altitude = config['ALTITUDE']
+altitude = config['ALTITUDE']
 
 def calculate_gsd(altitude, sensor_dim, focal_length, image_dim):
     """
     Calculate the Ground Sample Distance (GSD).
     """
-    return (altitude * sensor_dim) / (focal_length * image_dim*100)
+    return (altitude * sensor_dim) / (focal_length * image_dim)
 
 def calculate_destination(lat1_deg, long1_deg, d_km, theta_deg):
     """
@@ -41,7 +41,7 @@ def process_image(filename, all_waypoints, base_filename):
     Process each image for clicking and calculating coordinates.
     """
     parts = base_filename[:-4].split('_')
-    lat, lon, altitude, drone_yaw = map(float, parts)
+    lat, lon, _, drone_yaw = map(float, parts)
     # altitude = altitude  
     drone_yaw = drone_yaw
     if drone_yaw<0:
@@ -54,6 +54,7 @@ def process_image(filename, all_waypoints, base_filename):
 
     def onclick(event):
         ix, iy = event.xdata, event.ydata
+        global altitude
         gsdW = calculate_gsd(altitude, sensor_width, focal_length, image_width)
         gsdH = calculate_gsd(altitude, sensor_height, focal_length, image_height)
         print(f"gsdW: {gsdW} m/px, gsdH: {gsdH} m/px")
@@ -93,7 +94,7 @@ def send_data(data, host, port):
         s.sendall("END_OF_DATA".encode('utf-8'))
         
 
-folder_path = "../images" 
+folder_path = "../images/bigdrone" 
 waypoints = []
 
 for filename in os.listdir(folder_path):
@@ -103,6 +104,8 @@ for filename in os.listdir(folder_path):
 
 data_to_send = {"waypoints": waypoints}
 print(waypoints)
+with open('image_data.json', 'w') as json_file:
+    json.dump(data_to_send, json_file, indent=4)
 # host = config["GCS_SERVER_IP"]
 # port = config["AIRDROPS_PORT"]
 

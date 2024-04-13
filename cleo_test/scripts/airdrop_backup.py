@@ -42,10 +42,13 @@ def process_image(filename):
     if yaw<0:
         yaw+=360
     # altitude = altitude - 86
-    # print(altitude)
+    
     altitude = config["ALTITUDE"]
+    altitude=altitude
+    # print(altitude)
     image = imread(filename)
     image_height, image_width, _ = image.shape
+    # print(image_width)
     fig, ax = plt.subplots()
     ax.imshow(image)
     
@@ -61,15 +64,18 @@ def process_image(filename):
 
     if clicked_coords:
         ix, iy = clicked_coords[0]
+        print(ix,iy)
         pixel_offset_x = ix - (image_width / 2)
         pixel_offset_y = (image_height / 2) - iy
         gsdW = calculate_gsd(altitude, sensor_width, focal_length, image_width)
-        gsdH = calculate_gsd(altitude, sensor_height, focal_length, image_height)
-        gsd=max(gsdW,gsdH)
-        print(gsdW, gsdH)
+        # gsdH = calculate_gsd(altitude, sensor_height, focal_length, image_height)
+        # gsd=max(gsdW,gsdH)
+        # print(gsdW, gsdH)
+        # print(gsdW)
         # print()
-        offset_x_meters = pixel_offset_x * gsdW
-        offset_y_meters = pixel_offset_y * gsdH
+        # print(pixel_offset_x,pixel_offset_y)
+        offset_x_meters = pixel_offset_x * 0.0071
+        offset_y_meters = pixel_offset_y * 0.0071
         angle_rad = atan2(offset_x_meters,offset_y_meters)
         angle_deg = degrees(angle_rad)
         if angle_deg<0:

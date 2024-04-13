@@ -224,7 +224,7 @@ def perdorm_airdrop(airdrop_wp,pin_number,pwm_value):
     item = MissionPlanner.Utilities.Locationwp() # creating waypoint
     Locationwp.lat.SetValue(item,airdrop_wp['latitude']) # sets latitude
     Locationwp.lng.SetValue(item,airdrop_wp['longitude']) # sets longitude
-    Locationwp.alt.SetValue(item,airdrop_wp['altitude']/FT_TO_MT) # sets altitude
+    Locationwp.alt.SetValue(item,85/FT_TO_MT) # sets altitude
     MAV.setGuidedModeWP(item)
     print("Found ODLC object - Going to airdrop location")
     check_proximity(airdrop_wp['latitude'],airdrop_wp['longitude'])
@@ -281,14 +281,18 @@ def main():
     coverage_waypoints = load_coverage_wps(config["COVERAGE_WAYPOINTS_JSON"])
     mission.extend(coverage_waypoints)
     arm_and_takeoff(TAKEOFF_ALT)
-    upload_mission(mission)
+    upload_mission(coverage_waypoints)
     # start_server(HOST, PORT, AIRDROPS_JSON_FOLDER)
     # airdrop_wps_json = os.path.join(AIRDROPS_JSON_FOLDER,config["AIRDROPS_JSON_FILENAME"])
     # airdrop_wps = load_airdrop_wps(airdrop_wps_json)
-    # for airdrop in airdrop_wps:
+    airdrop_wps_json = "C:/Users/maxim/gaurav/suas24/cleo_test/scripts/image_data.json"
+    airdrop_wps = load_airdrop_wps(airdrop_wps_json)
+
+    for airdrop in airdrop_wps:
+        local_airdrop(airdrop,10,2100)
         # perdorm_airdrop(airdrop,10,2100)
-    #airdrop_wps_json = "C:/Users/maxim/gaurav/suas24/cleo_test/scripts/image_data.json"
-    #airdrop_wps = load_airdrop_wps(airdrop_wps_json)
+    airdrop_wps_json = "C:/Users/maxim/gaurav/suas24/cleo_test/scripts/image_data.json"
+    airdrop_wps = load_airdrop_wps(airdrop_wps_json)
     # for airdrop in airdrop_wps:
         # local_airdrop(airdrop,10,2100)
 
