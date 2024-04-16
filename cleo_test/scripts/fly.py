@@ -67,7 +67,7 @@ def arm_and_takeoff(alt):
     Arms the drone and takes off to 'alt' feet
     '''
 
-    Script.ChangeMode('Stabilize')
+    Script.ChangeMode('PosHold')
     Script.Sleep(1000)
     print("Arming Motors")
     MAV.doARM(True)
@@ -186,13 +186,12 @@ def local_airdrop(airdrop,pin_number,pwm_value):
     path : path to json file containing airdrop coordinates
     '''
     Script.ChangeMode("Guided")
-
-    item = MissionPlanner.Utilities.Locationwp()
-    Locationwp.lat.SetValue(item,airdrop['latitude'])
-    Locationwp.lng.SetValue(item,airdrop['longitude'])
-    Locationwp.alt.SetValue(item,85/FT_TO_MT) 
-    MAV.setGuidedModeWP(item)
-    check_proximity(airdrop['latitude'],airdrop['longitude'])
+    # item = MissionPlanner.Utilities.Locationwp()
+    # Locationwp.lat.SetValue(item,airdrop['latitude'])
+    # Locationwp.lng.SetValue(item,airdrop['longitude'])
+    # Locationwp.alt.SetValue(item,85/FT_TO_MT) 
+    # MAV.setGuidedModeWP(item)
+    # check_proximity(airdrop['latitude'],airdrop['longitude'])
     # Script.Sleep(5000)
     
     MAV.doCommand(MAVLink.MAV_CMD.CONDITION_YAW,airdrop['yaw'],15,0,0,0,0,0)
@@ -215,6 +214,31 @@ def local_airdrop(airdrop,pin_number,pwm_value):
     print("Sent Servo Command")
     Script.Sleep(20000)
 
+def centering(host,port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind((host, port))
+        s.listen()
+        print(f"Server listening on {host}:{port}")
+
+        while True:
+            conn, addr = s.accept()
+            with conn:
+                print(f"Connected by {addr}")
+                data=''
+                while True:
+                    part = conn.recv(1024)
+                    print(part)
+                    data=part
+                    break
+
+                json_data = json.loads(data.decode('utf-8'))
+                print("Received data:")
+                print(json.dumps(json_data, indent=4))
+                return json_data
+
+        print("Out")
+
+
 def perdorm_airdrop(airdrop_wp,pin_number,pwm_value):
 
     '''
@@ -229,10 +253,13 @@ def perdorm_airdrop(airdrop_wp,pin_number,pwm_value):
     print("Found ODLC object - Going to airdrop location")
     check_proximity(airdrop_wp['latitude'],airdrop_wp['longitude'])
     Script.Sleep(2000)
-    print("Sending servo command")
-    MAV.doCommand(MAVLink.MAV_CMD.DO_SET_SERVO,pin_number,pwm_value,0,0,0,0,0)
-    print("Sent Servo Command")
-    Script.Sleep(20000)
+    test=centering(HOST,6969)
+    print(test)
+    local_airdrop(test['waypoints'][0],pin_number,pwm_value)
+    # print("Sending servo command")
+    # MAV.doCommand(MAVLink.MAV_CMD.DO_SET_SERVO,pin_number,pwm_value,0,0,0,0,0)
+    # print("Sent Servo Command")
+    # Script.Sleep(20000)
 
 def start_server(host, port, save_path):
 
@@ -291,12 +318,7 @@ def main():
     for airdrop in airdrop_wps:
         # local_airdrop(airdrop,10,2100)
         perdorm_airdrop(airdrop,10,2100)
-    airdrop_wps_json = "C:/Users/maxim/gaurav/suas24/cleo_test/scripts/image_data.json"
-    airdrop_wps = load_airdrop_wps(airdrop_wps_json)
-    # for airdrop in airdrop_wps:
-        # local_airdrop(airdrop,10,2100)
 
-        
     # upload_mission(test)
     # print("done")
 

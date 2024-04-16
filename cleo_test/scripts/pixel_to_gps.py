@@ -55,9 +55,9 @@ def process_image(filename, all_waypoints, base_filename):
     def onclick(event):
         ix, iy = event.xdata, event.ydata
         global altitude
-        gsdW = calculate_gsd(altitude, sensor_width, focal_length, image_width)
-        gsdH = calculate_gsd(altitude, sensor_height, focal_length, image_height)
-        print(f"gsdW: {gsdW} m/px, gsdH: {gsdH} m/px")
+        # gsdW = calculate_gsd(altitude, sensor_width, focal_length, image_width)
+        # gsdH = calculate_gsd(altitude, sensor_height, focal_length, image_height)
+        # print(f"gsdW: {gsdW} m/px, gsdH: {gsdH} m/px")
         
         pixel_offset_x = ix - (image_width / 2)
         pixel_offset_y = (image_height / 2) - iy
@@ -86,13 +86,22 @@ def process_image(filename, all_waypoints, base_filename):
 
 def send_data(data, host, port):
     """
-    Send data to the specified server.
+    Send data to the specified server using a context manager to ensure
+    the socket is closed properly.
     """
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect((host, port))
-        s.sendall(json.dumps(data).encode('utf-8'))
-        s.sendall("END_OF_DATA".encode('utf-8'))
-        
+    # Convert the data to JSON format and encode it to bytes
+    data_to_send = json.dumps(data).encode('utf-8')
+
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.connect((host, port))
+            s.sendall(data_to_send)
+            s.sendall("END_OF_DATA".encode('utf-8'))
+    except socket.error as e:
+        print(f"Socket error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
 
 folder_path = "../images/bigdrone" 
 waypoints = []
