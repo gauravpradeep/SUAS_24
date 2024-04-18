@@ -108,14 +108,10 @@ def send_data(data, host, port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((host, port))
         s.sendall(json.dumps(data).encode('utf-8'))
-        s.sendall("END_OF_DATA".encode('utf-8'))
+        # s.sendall("END_OF_DATA".encode('utf-8'))
         
-data_to_send = {"waypoints": data}
-# with open('image_data.json', 'w') as json_file:
-#     json.dump(data_to_send, json_file, indent=4)
-    
+data_to_send = {"waypoints": data}    
 print(data_to_send)
-# host = config["GCS_SERVER_IP"]
-# port = config["AIRDROPS_PORT"]
-
-send_data(data_to_send, "169.254.246.70", 50579)
+host = "169.254.246.70"
+port = config["AIRDROPS_PORT"]
+send_data(data_to_send, host, port)
