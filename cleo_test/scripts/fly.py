@@ -22,7 +22,7 @@ FT_TO_MT : Conversion factor for feet to metres since all altitudes in mission p
 ALT : Initial takeoff altitude in feet
 '''
 
-with open('C:/Users/maxim/gaurav/suas24/cleo_test/scripts/gcs_config.json', 'r') as config_file:
+with open('C:/Users/anaad/Documents/projects/gcs-planner/cleo_test/scripts/gcs_config.json', 'r') as config_file:
     config = json.load(config_file)
 
 FT_TO_MT = 3.28084
@@ -117,7 +117,7 @@ def load_airdrop_wps(file_path):
 
     with open(file_path, 'r') as file:
         data = json.load(file)
-    return data["waypoints"]
+    return data
 
 def check_proximity(final_lat,final_lon):
 
@@ -176,7 +176,7 @@ def upload_mission(waypoints):
     Script.Sleep(500)
     print("Starting Mission")
     Script.ChangeMode('Auto')
-    Script.Sleep(2000)
+    Script.Sleep(20000)
     check_status(waypoints[-1]['latitude'],waypoints[-1]['longitude'],len(waypoints))
 
 def local_airdrop(airdrop,pin_number,pwm_value):
@@ -187,15 +187,16 @@ def local_airdrop(airdrop,pin_number,pwm_value):
     '''
     Script.ChangeMode("Guided")
     item = MissionPlanner.Utilities.Locationwp()
-    Locationwp.lat.SetValue(item,airdrop['latitude'])
-    Locationwp.lng.SetValue(item,airdrop['longitude'])
-    Locationwp.alt.SetValue(item,85/FT_TO_MT) 
+    Locationwp.lat.SetValue(item,float(airdrop['latitude']))
+    Locationwp.lng.SetValue(item,float(airdrop['longitude']))
+    Locationwp.alt.SetValue(item,83/FT_TO_MT) 
     MAV.setGuidedModeWP(item)
-    check_proximity(airdrop['latitude'],airdrop['longitude'])
-    Script.Sleep(1000)
+    check_proximity(float(airdrop['latitude']),float(airdrop['longitude']))
+    Script.Sleep(500)
     
-    MAV.doCommand(MAVLink.MAV_CMD.CONDITION_YAW,airdrop['yaw'],15,0,0,0,0,0)
-    Script.Sleep(20000)
+    MAV.doCommand(MAVLink.MAV_CMD.CONDITION_YAW,float(airdrop['yaw']),0,0,0,0,0,0)
+    print("YAWING")
+    Script.Sleep(7500)
 
     command = mavlink_set_position_target_local_ned_t()
 
@@ -208,13 +209,14 @@ def local_airdrop(airdrop,pin_number,pwm_value):
     target_component = 1
 
     MAV.sendPacket(command, target_system, target_component)
-    Script.Sleep(5000)
+    print("First local frame movement")
+    Script.Sleep(7000)
     for _ in range(2):
-        centering(HOST,6969)
+        centering(HOST,PORT)
     print("Sending servo command")
     MAV.doCommand(MAVLink.MAV_CMD.DO_SET_SERVO,pin_number,pwm_value,0,0,0,0,0)
     print("Sent Servo Command")
-    Script.Sleep(20000)
+    Script.Sleep(15000)
 
 def centering(host,port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -236,21 +238,19 @@ def centering(host,port):
                 json_data = json.loads(data.decode('utf-8'))
                 print("Received data:")
                 print(json.dumps(json_data, indent=4))
-                # return json_data
                 Script.ChangeMode("Guided")
                 command = mavlink_set_position_target_local_ned_t() 
                 mavlink_set_position_target_local_ned_t.coordinate_frame.SetValue(command, 9)
                 mavlink_set_position_target_local_ned_t.type_mask.SetValue(command, 0b0000111111111000)
-                mavlink_set_position_target_local_ned_t.x.SetValue(command, json_data['waypoints'][0]['y_coordinate']) 
-                mavlink_set_position_target_local_ned_t.y.SetValue(command, json_data['waypoints'][0]['x_coordinate'])
+                mavlink_set_position_target_local_ned_t.x.SetValue(command, json_data[0]['y_coordinate']) 
+                mavlink_set_position_target_local_ned_t.y.SetValue(command, json_data[0]['x_coordinate'])
                 mavlink_set_position_target_local_ned_t.z.SetValue(command, 0) 
                 target_system = 1
                 target_component = 1
                 MAV.sendPacket(command, target_system, target_component)
-                Script.Sleep(7000)
+                print("Centering")
+                Script.Sleep(6500)
                 break
-    print("OUT")
-
 
 def perdorm_airdrop(airdrop_wp,pin_number,pwm_value):
 
@@ -266,8 +266,8 @@ def perdorm_airdrop(airdrop_wp,pin_number,pwm_value):
     print("Found ODLC object - Going to airdrop location")
     check_proximity(airdrop_wp['latitude'],airdrop_wp['longitude'])
     Script.Sleep(2000)
-    for _ in range(2):
-        centering(HOST,6969)
+    # for _ in range(2):
+    #     centering(HOST,6969)
     # test=centering(HOST,6969)
     # print(test)
     # local_airdrop(test['waypoints'][0],pin_number,pwm_value)
@@ -294,11 +294,12 @@ def start_server(host, port, save_path):
                 data = b''
                 while True:
                     part = conn.recv(1024)
-                    if "END_OF_DATA".encode('utf-8') in part:
-                        part = part.replace("END_OF_DATA".encode('utf-8'), b'')
-                        data += part
-                        break
+                    # if "END_OF_DATA".encode('utf-8') in part:
+                    #     part = part.replace("END_OF_DATA".encode('utf-8'), b'')
+                    #     data += part
+                    #     break
                     data += part
+                    break
 
                 json_data = json.loads(data.decode('utf-8'))
                 print("Received data:")
@@ -315,29 +316,33 @@ def start_server(host, port, save_path):
         print("airdrop json created")
 
 def come_home():
+    Script.Sleep(2000)
     Script.ChangeMode('RTL')
     print("Coming Home ")
     
 def main():
-    mission = load_lap_waypoints(config["LAP_WAYPOINTS_JSON"])
-    coverage_waypoints = load_coverage_wps(config["COVERAGE_WAYPOINTS_JSON"])
-    mission.extend(coverage_waypoints)
-    arm_and_takeoff(TAKEOFF_ALT)
-    upload_mission(coverage_waypoints)
-    start_server(HOST, PORT, AIRDROPS_JSON_FOLDER)
+    lap = load_lap_waypoints(config["LAP_WAYPOINTS_JSON"])
+    coverage = load_coverage_wps(config["COVERAGE_WAYPOINTS_JSON"])
+    mission = lap+coverage
+    # mission.extend(coverage_waypoints)
+    # arm_and_takeoff(TAKEOFF_ALT)
+    # upload_mission(mission)
+    # start_server(HOST, PORT, AIRDROPS_JSON_FOLDER)
     airdrop_wps_json = os.path.join(AIRDROPS_JSON_FOLDER,config["AIRDROPS_JSON_FILENAME"])
     airdrop_wps = load_airdrop_wps(airdrop_wps_json)
-    # airdrop_wps_json = "C:/Users/maxim/gaurav/suas24/cleo_test/scripts/image_data.json"
-    # airdrop_wps = load_airdrop_wps(airdrop_wps_json)
 
-    for airdrop in airdrop_wps:
-        local_airdrop(airdrop,10,2100)
-        # perdorm_airdrop(airdrop,10,2100)
+    for i,airdrop in enumerate(airdrop_wps):
+        if i==0:
+            print(int(airdrop["pinNumber"]))
+            local_airdrop(airdrop,int(airdrop["pinNumber"]),2100)
+        else:
+            upload_mission(lap)
+            print(int(airdrop["pinNumber"]))
+            local_airdrop(airdrop,int(airdrop["pinNumber"]),2100)
 
-    # upload_mission(test)
-    # print("done")
-
+    
+    print("done with airdrops")
+    
     come_home()
-    # Script.ChangeMode('Land')
 
 main()
