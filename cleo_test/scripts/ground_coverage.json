@@ -1,0 +1,64 @@
+{
+    "waypoints": [
+        {
+            "latitude": 13.34427849115516,
+            "longitude": 74.79399848454077,
+            "altitude": 80
+        },
+        {
+            "latitude": 13.344169195343463,
+            "longitude": 74.79401351187599,
+            "altitude": 80
+        },
+        {
+            "latitude": 13.344059899514232,
+            "longitude": 74.79402853907683,
+            "altitude": 80
+        },
+        {
+            "latitude": 13.343950603667462,
+            "longitude": 74.79404356614334,
+            "altitude": 80
+        },
+        {
+            "latitude": 13.344257469738228,
+            "longitude": 74.79383903265231,
+            "altitude": 80
+        },
+        {
+            "latitude": 13.344148174104875,
+            "longitude": 74.79385406003502,
+            "altitude": 80
+        },
+        {
+            "latitude": 13.34403887845396,
+            "longitude": 74.79386908728337,
+            "altitude": 80
+        },
+        {
+            "latitude": 13.343929582785515,
+            "longitude": 74.79388411439736,
+            "altitude": 80
+        },
+        {
+            "latitude": 13.344236448253024,
+            "longitude": 74.79367958103806,
+            "altitude": 80
+        },
+        {
+            "latitude": 13.34412715279797,
+            "longitude": 74.79369460846827,
+            "altitude": 80
+        },
+        {
+            "latitude": 13.34401785732538,
+            "longitude": 74.7937096357641,
+            "altitude": 80
+        },
+        {
+            "latitude": 13.343908561835274,
+            "longitude": 74.7937246629256,
+            "altitude": 80
+        }
+    ]
+}

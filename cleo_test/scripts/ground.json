@@ -1,0 +1,29 @@
+{
+  "waypoints": [
+    {
+      "latitude": 13.344236964457297,
+      "longitude": 74.7936800037587,
+      "altitude": 90
+    },
+    {
+      "latitude": 13.344326799706726,
+      "longitude": 74.79394288564438,
+      "altitude": 90
+    },
+    {
+      "latitude": 13.343986437993939,
+      "longitude": 74.79411981035963,
+      "altitude": 90
+    },
+    {
+      "latitude": 13.34388092414447,
+      "longitude": 74.79382757341294,
+      "altitude": 90
+    },
+    {
+      "latitude": 13.344236964457297,
+      "longitude": 74.7936800037587,
+      "altitude": 90
+    }
+  ]
+}
