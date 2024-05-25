@@ -29,13 +29,14 @@ def create_server(host=HOST, port=PORT):
 
 def send_gps_data(client_socket):
     try:
-        data_with_crlf = ""
-        for data in gps_data:
-            # Add CRLF to the end of each GPS data string
-            data_with_crlf += data + '\r\n'
-            # break
-        time.sleep(2)  # Wait for 2 seconds before sending the next data
-        client_socket.sendall(data_with_crlf.encode('utf-8'))
+        while True:
+            data_with_crlf = ""
+            for data in gps_data:
+                # Add CRLF to the end of each GPS data string
+                data_with_crlf = data + '\r\n'
+                # break
+                client_socket.sendall(data_with_crlf.encode('utf-8'))
+                time.sleep(0.2)  # Wait for 2 seconds before sending the next data
     except socket.error as e:
         print(f"Socket error: {e}")
     finally:
